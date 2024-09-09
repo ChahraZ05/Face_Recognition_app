@@ -12,14 +12,12 @@ model = InceptionResnetV1(pretrained='vggface2').eval()
 mtcnn = MTCNN(keep_all=True)
 
 # Load FAISS index
-index = faiss.read_index('/kaggle/working/faiss_index.index')
+index = faiss.read_index('faiss_index.index')
 
-# Load embeddings and labels
+# Load embeddings
 import pickle
-with open('/kaggle/working/embeddings.pkl', 'rb') as f:
+with open('lfw_embeddings.pkl', 'rb') as f:
     all_embeddings = pickle.load(f)
-with open('/kaggle/working/labels.pkl', 'rb') as f:
-    labels = pickle.load(f)
 
 # Function to preprocess images
 def preprocess_image(image):
