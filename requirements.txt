@@ -1,7 +1,7 @@
 streamlit
 torch
-opencv-python-headless
+facenet-pytorch
 Pillow
-opencv-python
+opencv-python-headless
 faiss-cpu
 numpy
