@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 import faiss
 import pickle
-from facenet_pytorch import InceptionResnetV1, MTCNN
+from facenet_pytorch import InceptionResnetV1
 
 # Load the pre-trained model and FAISS index
 model = InceptionResnetV1(pretrained='vggface2').eval()
