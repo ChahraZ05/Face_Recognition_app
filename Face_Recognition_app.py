@@ -63,6 +63,3 @@ if uploaded_file is not None:
     # Display result
     st.write(f"Closest match index: {closest_index}")
     st.write(f"Distance from query: {closest_distance:.2f}")
-    
-    # Display the result
-    st.write(f"Closest Match: {closest_name}")
