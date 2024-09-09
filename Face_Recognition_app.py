@@ -11,10 +11,10 @@ from facenet_pytorch import InceptionResnetV1
 model = InceptionResnetV1(pretrained='vggface2').eval()
 
 # Load FAISS index
-index = faiss.read_index('/kaggle/working/faiss_index.index')
+index = faiss.read_index('faiss_index.index')
 
 # Load embeddings
-with open('/kaggle/working/embeddings.pkl', 'rb') as f:
+with open('lfw_embeddings.pkl', 'rb') as f:
     all_embeddings = pickle.load(f)
 
 # Define preprocessing function
