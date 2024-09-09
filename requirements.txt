@@ -2,3 +2,6 @@ streamlit
 torch
 facenet-pytorch
 Pillow
+opencv-python
+faiss-cpu
+numpy
