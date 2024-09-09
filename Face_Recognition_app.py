@@ -44,6 +44,8 @@ st.title("Face Recognition App")
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png"])
 
 if uploaded_file is not None:
+    st.write("File uploaded successfully")
+    st.write(f"File size: {uploaded_file.size} bytes")
     try:
         img = Image.open(uploaded_file)
         st.image(img, caption='Uploaded Image', use_column_width=True)
@@ -52,7 +54,6 @@ if uploaded_file is not None:
         if img_tensor is not None:
             matches = find_similar_faces(img_tensor)
             if matches is not None:
-                # Assuming you have a list of person names matching the embeddings
                 matched_persons = [list(all_embeddings.keys())[i] for i in matches]
                 st.write(f"Top Matches: {', '.join(matched_persons)}")
             else:
