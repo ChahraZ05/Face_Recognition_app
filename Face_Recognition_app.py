@@ -14,10 +14,12 @@ mtcnn = MTCNN(keep_all=True)
 # Load FAISS index
 index = faiss.read_index('faiss_index.index')
 
-# Load embeddings
+# Load embeddings and labels
 import pickle
 with open('lfw_embeddings.pkl', 'rb') as f:
     all_embeddings = pickle.load(f)
+with open('labels.pkl', 'rb') as f:
+    labels = pickle.load(f)
 
 # Function to preprocess images
 def preprocess_image(image):
