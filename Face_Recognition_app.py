@@ -1,65 +1,70 @@
 import streamlit as st
-import cv2
-import numpy as np
-import torch
-import pickle
 import faiss
-from torchvision import transforms
+import torch
+import numpy as np
+import pickle
+import cv2
 from facenet_pytorch import InceptionResnetV1
+from PIL import Image
 
-# Load the model
-model = InceptionResnetV1(pretrained='vggface2').eval()
-
-# Load FAISS index
+# Load FAISS index and embeddings
 index = faiss.read_index('faiss_index.index')
 
-# Load embeddings
+# Load the embeddings dictionary
 with open('lfw_embeddings.pkl', 'rb') as f:
     all_embeddings = pickle.load(f)
 
-# Define preprocessing function
-def preprocess_image(img):
-    # Convert image to RGB
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    
-    # Resize image to 160x160
-    img = cv2.resize(img, (160, 160))
-    
-    # Convert image to tensor
-    img = torch.tensor(img, dtype=torch.float32)
-    img = img.permute(2, 0, 1)  # Change to (C, H, W)
-    img = img.unsqueeze(0)  # Add batch dimension
-    
-    # Normalize image
-    img = (img / 255.0 - 0.5) / 0.5
-    return img
+# Initialize InceptionResnetV1 model
+model = InceptionResnetV1(pretrained='vggface2').eval()
 
-# Define function for face recognition
-def recognize_face(uploaded_file):
-    # Load and preprocess image
-    img = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), cv2.IMREAD_COLOR)
+# Preprocess image using OpenCV
+def preprocess_image(img):
+    img = cv2.resize(img, (160, 160))  # Resize to 160x160
+    img = img / 255.0  # Normalize pixel values
+    img = np.transpose(img, (2, 0, 1))  # Change to (C, H, W)
+    img_tensor = torch.tensor([img], dtype=torch.float32)  # Add batch dimension
+    return img_tensor
+
+# Function to perform face embedding and matching
+def identify_face(image):
+    # Convert PIL image to OpenCV format
+    img = np.array(image)
+
+    # Preprocess image
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img_tensor = preprocess_image(img)
-    
-    # Generate face embedding
+
+    # Generate embedding
     with torch.no_grad():
         query_embedding = model(img_tensor).numpy().flatten()
-    
-    # Search for similar faces
-    D, I = index.search(np.expand_dims(query_embedding, axis=0), k=5)  # Top 5 matches
-    
-    # Return the top match index and distance
-    closest_index = I[0][0]
-    closest_distance = D[0][0]
-    return closest_index, closest_distance
 
-# Streamlit UI
-st.title("Face Recognition System")
-uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    # Search for the closest match in FAISS index
+    D, I = index.search(np.expand_dims(query_embedding, axis=0), k=1)  # Get top 1 match
+    closest_index = I[0][0]  # Get the index of the closest match
+    
+    # Retrieve the name of the closest match
+    closest_person = None
+    current_index = 0
+    for person, embeddings in all_embeddings.items():
+        if current_index <= closest_index < current_index + len(embeddings):
+            closest_person = person
+            break
+        current_index += len(embeddings)
+    
+    return closest_person if closest_person else "No match found."
+
+# Streamlit app UI
+st.title("Face Recognition App")
+st.write("Upload an image to identify the person.")
+
+# Image upload widget
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Recognize face
-    closest_index, closest_distance = recognize_face(uploaded_file)
-    
-    # Display result
-    st.write(f"Closest match index: {closest_index}")
-    st.write(f"Distance from query: {closest_distance:.2f}")
+    # Display the uploaded image
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+
+    # Process and identify the face in the image
+    result = identify_face(image)
+    st.write(f"Closest match: {result}")
