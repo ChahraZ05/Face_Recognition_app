@@ -4,17 +4,16 @@ import numpy as np
 import torch
 import pickle
 import faiss
-from torchvision import transforms
 from facenet_pytorch import InceptionResnetV1
 
 # Load the model
 model = InceptionResnetV1(pretrained='vggface2').eval()
 
 # Load FAISS index
-index = faiss.read_index('faiss_index.index')
+index = faiss.read_index('/kaggle/working/faiss_index.index')
 
-# Load embeddings
-with open('lfw_embeddings.pkl', 'rb') as f:
+# Load embeddings and associate them with their respective person names
+with open('/kaggle/working/embeddings.pkl', 'rb') as f:
     all_embeddings = pickle.load(f)
 
 # Define preprocessing function
@@ -34,32 +33,40 @@ def preprocess_image(img):
     img = (img / 255.0 - 0.5) / 0.5
     return img
 
-# Define function for face recognition
-def recognize_face(uploaded_file):
-    # Load and preprocess image
-    img = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), cv2.IMREAD_COLOR)
-    img_tensor = preprocess_image(img)
+# Function to find the closest person match
+def find_closest_person(embedding, k=1):
+    # Search in the FAISS index
+    D, I = index.search(np.expand_dims(embedding, axis=0), k=k)  # Search for top k matches
     
-    # Generate face embedding
-    with torch.no_grad():
-        query_embedding = model(img_tensor).numpy().flatten()
+    # Map the index to the person name
+    current_count = 0
+    for person, embeddings in all_embeddings.items():
+        if I[0][0] < current_count + len(embeddings):
+            return person, D[0][0]  # Return the closest person and the distance
+        current_count += len(embeddings)
     
-    # Search for similar faces
-    D, I = index.search(np.expand_dims(query_embedding, axis=0), k=5)  # Top 5 matches
-    
-    # Return the top match index and distance
-    closest_index = I[0][0]
-    closest_distance = D[0][0]
-    return closest_index, closest_distance
+    return None, None
 
 # Streamlit UI
 st.title("Face Recognition System")
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Recognize face
-    closest_index, closest_distance = recognize_face(uploaded_file)
+    # Load the image
+    img = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), cv2.IMREAD_COLOR)
+    
+    # Preprocess the image
+    img_tensor = preprocess_image(img)
+    
+    # Generate face embedding
+    with torch.no_grad():
+        query_embedding = model(img_tensor).numpy().flatten()
+    
+    # Find the closest match
+    closest_person, distance = find_closest_person(query_embedding)
     
     # Display result
-    st.write(f"Closest match index: {closest_index}")
-    st.write(f"Distance from query: {closest_distance:.2f}")
+    if closest_person:
+        st.write(f"Closest Match: {closest_person} (Distance: {distance:.2f})")
+    else:
+        st.write("No match found.")
