@@ -5,6 +5,7 @@ the repository contains ****the python code to create the app****, the two files
 
 ### the python code:
 the steps that the code conatins are:
+
 1/loading the faiss index file and reading it: using faiss.read_index()
 
 2/loading the embeddings from the embeddings pickle file: using pickle.load()
