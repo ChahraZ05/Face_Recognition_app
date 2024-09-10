@@ -6,10 +6,16 @@ the repository contains ****the python code to create the app****, the two files
 ### the python code:
 the steps that the code conatins are:
 1/loading the faiss index file and reading it: using faiss.read_index()
+
 2/loading the embeddings from the embeddings pickle file: using pickle.load()
+
 3/loading the InceptionResnetV1 embedding model: we need it to embed the face on the image loaded by the user later on
+
 4/creating a function for preprocessing the images: (with the function created earlier on the kaggle notebook)
+
 5/creating a function to embed the face on the loaded image: in this function the image is going to be preprocessed using the previous function, embedded using the embedding model and it will search for the closest match for the face
+
 6/creating the app (using the stramlit library so that we are going to be able to launch the app into the streamlit share website)
+
 
 ****then go back to the kaggle notebook to be able to find the URL to the face recognition app which is ready to use :)****
