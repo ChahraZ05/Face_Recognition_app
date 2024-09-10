@@ -54,7 +54,7 @@ def identify_face(image):
     return closest_person if closest_person else "No match found."
 
 # Streamlit app UI
-st.title("ChahraZ Face Recognition App")
+st.title("Face Recognition App")
 st.write("Upload an image to identify the person.")
 
 # Image upload widget
