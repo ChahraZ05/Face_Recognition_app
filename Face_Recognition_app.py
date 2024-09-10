@@ -42,6 +42,10 @@ def identify_face(image):
     k = 5  # Increase the number of neighbors
     D, I = index.search(np.expand_dims(query_embedding, axis=0), k=k)
     
+    # Debug: Print distances and indices
+    st.write(f"Distances: {D}")
+    st.write(f"Indices: {I}")
+    
     # Retrieve the names of the closest matches
     matched_persons = []
     for idx in I[0]:
@@ -52,6 +56,9 @@ def identify_face(image):
                 break
             current_index += len(embeddings)
 
+    # Debug: Print matched persons
+    st.write(f"Matched Persons: {matched_persons}")
+    
     # Majority voting to determine the closest match
     if matched_persons:
         closest_person = max(set(matched_persons), key=matched_persons.count)
