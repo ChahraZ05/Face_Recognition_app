@@ -38,20 +38,26 @@ def identify_face(image):
     with torch.no_grad():
         query_embedding = model(img_tensor).numpy().flatten()
 
-    # Search for the closest match in FAISS index
-    D, I = index.search(np.expand_dims(query_embedding, axis=0), k=1)  # Get top 1 match
-    closest_index = I[0][0]  # Get the index of the closest match
+    # Search for the top k matches in FAISS index
+    k = 5  # Increase the number of neighbors
+    D, I = index.search(np.expand_dims(query_embedding, axis=0), k=k)
     
-    # Retrieve the name of the closest match
-    closest_person = None
-    current_index = 0
-    for person, embeddings in all_embeddings.items():
-        if current_index <= closest_index < current_index + len(embeddings):
-            closest_person = person
-            break
-        current_index += len(embeddings)
-    
-    return closest_person if closest_person else "No match found."
+    # Retrieve the names of the closest matches
+    matched_persons = []
+    for idx in I[0]:
+        current_index = 0
+        for person, embeddings in all_embeddings.items():
+            if current_index <= idx < current_index + len(embeddings):
+                matched_persons.append(person)
+                break
+            current_index += len(embeddings)
+
+    # Majority voting to determine the closest match
+    if matched_persons:
+        closest_person = max(set(matched_persons), key=matched_persons.count)
+        return closest_person
+    else:
+        return "No match found."
 
 # Streamlit app UI
 st.title("Face Recognition App")
